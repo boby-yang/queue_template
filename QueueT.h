@@ -53,7 +53,12 @@ template <typename T>
 QueueT<T>::QueueT(const QueueT<T> &src)
 {
 	cur_size = src.cur_size;
-	if (cur_size > 0)
+	if (cur_size == 0)
+	{
+		front = nullptr;
+		back = nullptr;
+	}
+	else
 	{
 		front = new NodeT<T>(src.front->data, src.front->next);
 		back = front;
@@ -84,7 +89,7 @@ QueueT<T>::~QueueT()
 template <typename T>
 QueueT<T> QueueT<T>::operator=(const QueueT<T> &src)
 {
-	if (this != src)
+	if (&src != (const QueueT<T>*)this)
 	{
 		NodeT<T> *tmp;
 		NodeT<T> *cur = front;
@@ -96,12 +101,12 @@ QueueT<T> QueueT<T>::operator=(const QueueT<T> &src)
 			delete tmp;
 		}
 
-		NodeT<T> newFront = new NodeT<T>(src.front); //TODO check node constractor
-		NodeT<T> newBack = newFront;
+		NodeT<T> *newFront = new NodeT<T>(src.front->data, src.front->next);
+		NodeT<T> *newBack = newFront;
 		cur = src.front->next;
 		while (cur != nullptr)
 		{
-			newBack->next = new NodeT<T>(cur); //TODO check node constractor
+			newBack->next = new NodeT<T>(cur->data, cur->next);
 			newBack = newBack->next;
 			cur = cur->next;
 		}
@@ -117,8 +122,17 @@ void QueueT<T>::enqueue(T in)
 {
 	NodeT<T> *tmp;
 	tmp = new NodeT<T>(in);
-	back->next = tmp;
-	back = tmp;
+	if (cur_size == 0)
+	{
+		front = tmp;
+		back = tmp;
+	}
+	else
+	{
+		back->next = tmp;
+		back = tmp;
+	}
+	cur_size++;
 	return ;
 }
 
@@ -133,6 +147,7 @@ T QueueT<T>::dequeue()
 	T out = front->data;
 	front = front->next;
 	delete tmp;
+	cur_size--;
 	return (out);
 }
 
@@ -163,10 +178,9 @@ int QueueT<T>::size() const
 template <typename T>
 void QueueT<T>::concatenate(QueueT<T> &in, int n)
 {
-	if (in.size() > n)
+	if (in.size() < n)
 	{
 		throw std::runtime_error("Queue size is smaller than given n");
-		return ;
 	}
 	for (int i = 0; i < n; ++i)
 	{
@@ -180,10 +194,6 @@ QueueT<T> QueueT<T>::merge(const QueueT<T> &in)
 {
 	NodeT<T> *tmp1 = front;
 	NodeT<T> *tmp2 = in.front;
-	// if (nullptr == tmp1 && nullptr == tmp2)  
-	// {
-	// 	return nullptr;                           //return on error, not mentioned in prompt
-	// }
 	QueueT<T> out = QueueT();
 	while(nullptr != tmp1 && nullptr != tmp2)
 	{
