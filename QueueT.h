@@ -1,5 +1,6 @@
 #pragma once
 #include <iostream>
+#include <stdexcept>
 
 template <typename T>
 class NodeT{
@@ -30,14 +31,14 @@ public:
 	~QueueT();
 
 	QueueT operator=(const QueueT<T> &src);
-//	 Enqueue
-//	Deque
-//	Print
+	void enqueue(T in);
+	T dequeue();
+	void print();
 	bool empty();
-	int size();
-//	concatenate
-//	merge
-//	getFront
+	int size() const;
+	void concatenate(QueueT<T> &in, int n);
+	QueueT<T> merge(const QueueT<T> &in);
+	NodeT<T>* getFront();
 };
 
 template <typename T>
@@ -95,12 +96,12 @@ QueueT<T> QueueT<T>::operator=(const QueueT<T> &src)
 			delete tmp;
 		}
 
-		NodeT<T> newFront = new NodeT<T>(src.front);
+		NodeT<T> newFront = new NodeT<T>(src.front); //TODO check node constractor
 		NodeT<T> newBack = newFront;
 		cur = src.front->next;
 		while (cur != nullptr)
 		{
-			newBack->next = new NodeT<T>(cur);
+			newBack->next = new NodeT<T>(cur); //TODO check node constractor
 			newBack = newBack->next;
 			cur = cur->next;
 		}
@@ -112,13 +113,100 @@ QueueT<T> QueueT<T>::operator=(const QueueT<T> &src)
 }
 
 template <typename T>
+void QueueT<T>::enqueue(T in)
+{
+	NodeT<T> *tmp;
+	tmp = new NodeT<T>(in);
+	back->next = tmp;
+	back = tmp;
+	return ;
+}
+
+template <typename T>
+T QueueT<T>::dequeue()
+{
+	NodeT<T> *tmp = front;
+	if (nullptr == tmp)
+	{
+		throw std::runtime_error("queue is empty.");
+	}
+	T out = front->data;
+	front = front->next;
+	delete tmp;
+	return (out);
+}
+
+template <typename T>
+void QueueT<T>::print()
+{
+	NodeT<T> *tmp = front;
+	while(tmp != nullptr)
+	{
+		std::cout << std::to_string(tmp->data) << std::endl;
+		tmp = tmp->next;
+	}
+	return ;
+}
+
+template <typename T>
 bool QueueT<T>::empty()
 {
 	return (cur_size == 0);
 }
 
 template <typename T>
-int QueueT<T>::size()
+int QueueT<T>::size() const
 {
 	return cur_size;
 }
+
+template <typename T>
+void QueueT<T>::concatenate(QueueT<T> &in, int n)
+{
+	if (in.size() > n)
+	{
+		throw std::runtime_error("Queue size is smaller than given n");
+		return ;
+	}
+	for (int i = 0; i < n; ++i)
+	{
+		enqueue(in.dequeue());
+	}
+	return ;
+}
+
+template <typename T>
+QueueT<T> QueueT<T>::merge(const QueueT<T> &in)
+{
+	NodeT<T> *tmp1 = front;
+	NodeT<T> *tmp2 = in.front;
+	// if (nullptr == tmp1 && nullptr == tmp2)  
+	// {
+	// 	return nullptr;                           //return on error, not mentioned in prompt
+	// }
+	QueueT<T> out = QueueT();
+	while(nullptr != tmp1 && nullptr != tmp2)
+	{
+		out.enqueue(tmp1->data);
+		out.enqueue(tmp2->data);
+		tmp1 = tmp1->next;
+		tmp2 = tmp2->next;
+	}
+	while(nullptr != tmp1)
+	{
+		out.enqueue(tmp1->data);
+		tmp1 = tmp1->next;
+	}
+	while(nullptr != tmp2)
+	{
+		out.enqueue(tmp2->data);
+		tmp2 = tmp2->next;
+	}
+	return out;
+}
+
+template <typename T>
+NodeT<T>* QueueT<T>::getFront()
+{
+	return front;
+};
